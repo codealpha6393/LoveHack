@@ -1,98 +1,120 @@
-export function renderDashboard() {
-    const mainContent = document.getElementById('main-content');
+import { svgIcon } from '../icons.js';
+import { state } from '../state.js';
 
-    mainContent.innerHTML = `
-    <div class="h-full w-full p-8 overflow-y-auto">
-      <div class="max-w-5xl mx-auto">
-        <header class="mb-8">
-          <h1 class="text-3xl font-bold mb-2">Dashboard</h1>
-          <p class="text-text-secondary">Track your automated workflows and execution history.</p>
-        </header>
+export function renderDashboard(container, navigate) {
+  const history = state.execHistory || [];
+  const totalRuns = history.length;
+  const successRuns = history.filter(h => h.success).length;
+  const successRate = totalRuns > 0 ? ((successRuns / totalRuns) * 100).toFixed(1) : '—';
+  const savedCount = state.workflows.length;
 
-        <!-- Stats row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="glass-panel p-6 rounded-xl border-glass-border">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-text-secondary">Total Executions</h3>
-              <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
-                <i data-lucide="activity" class="w-4 h-4"></i>
-              </div>
-            </div>
-            <p class="text-3xl font-bold">2,451</p>
-            <p class="text-xs text-green-400 mt-2 flex items-center gap-1">
-              <i data-lucide="trending-up" class="w-3 h-3"></i> +14% this week
-            </p>
-          </div>
-          
-          <div class="glass-panel p-6 rounded-xl border-glass-border">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-text-secondary">Active Workflows</h3>
-              <div class="w-8 h-8 rounded-lg bg-accent-primary/10 flex items-center justify-center text-accent-primary">
-                <i data-lucide="zap" class="w-4 h-4"></i>
-              </div>
-            </div>
-            <p class="text-3xl font-bold">12</p>
-            <p class="text-xs text-text-tertiary mt-2 flex items-center gap-1">
-              Out of 15 limit
-            </p>
-          </div>
+  container.innerHTML = `
+    <div class="dashboard-page">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Real-time analytics from your workflow executions.</p>
+      </div>
 
-          <div class="glass-panel p-6 rounded-xl border-glass-border">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-text-secondary">Success Rate</h3>
-              <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-                <i data-lucide="check-circle" class="w-4 h-4"></i>
-              </div>
-            </div>
-            <p class="text-3xl font-bold">99.8%</p>
-            <p class="text-xs text-text-tertiary mt-2 flex items-center gap-1">
-              System is healthy
-            </p>
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Total Executions</span>
+            <div class="stat-card-icon bg-indigo color-purple">${svgIcon('activity')}</div>
           </div>
+          <div class="stat-card-value">${totalRuns.toLocaleString()}</div>
+          <div class="stat-card-meta">${totalRuns > 0 ? 'From live executions' : 'Run a workflow to see stats'}</div>
         </div>
-
-        <!-- Recent Activity -->
-        <div class="glass-panel rounded-xl border-glass-border overflow-hidden">
-          <div class="px-6 py-4 border-b border-glass-border flex items-center justify-between bg-white/5">
-            <h3 class="font-semibold">Recent Executions</h3>
-            <button class="text-sm text-accent-primary hover:text-accent-secondary">View All</button>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Saved Workflows</span>
+            <div class="stat-card-icon bg-indigo color-purple">${svgIcon('zap')}</div>
           </div>
-          <div class="p-0">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-glass-border hover:bg-white/5 transition-colors cursor-pointer">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-                  <i data-lucide="check" class="w-5 h-5"></i>
-                </div>
-                <div>
-                  <h4 class="font-medium">New Customer Onboarding</h4>
-                  <p class="text-xs text-text-secondary">Triggered via Webhook</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p class="text-sm">2 mins ago</p>
-                <p class="text-xs text-text-tertiary">1.2s duration</p>
-              </div>
-            </div>
-            <div class="flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors cursor-pointer">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-                  <i data-lucide="check" class="w-5 h-5"></i>
-                </div>
-                <div>
-                  <h4 class="font-medium">Daily Data Sync</h4>
-                  <p class="text-xs text-text-secondary">Scheduled trigger</p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p class="text-sm">1 hr ago</p>
-                <p class="text-xs text-text-tertiary">4.5s duration</p>
-              </div>
-            </div>
-          </div>
+          <div class="stat-card-value">${savedCount}</div>
+          <div class="stat-card-meta">${savedCount > 0 ? `${savedCount} workflow(s) on disk` : 'Save your first workflow'}</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Success Rate</span>
+            <div class="stat-card-icon bg-green color-green">${svgIcon('checkCircle')}</div>
+          </div>
+          <div class="stat-card-value">${successRate}${totalRuns > 0 ? '%' : ''}</div>
+          <div class="stat-card-meta">${totalRuns > 0 ? `${successRuns}/${totalRuns} successful` : 'No data yet'}</div>
+        </div>
+      </div>
+
+      <!-- Execution History -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-card-title">Execution History</span>
+          <button class="btn btn-secondary btn-sm" onclick="window.navigate('/canvas')">
+            ${svgIcon('zap')} New Workflow
+          </button>
+        </div>
+        ${history.length === 0 ? `
+          <div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3)">
+            ${svgIcon('activity')}<br/><br/>
+            No executions yet. Go to the Canvas and run a workflow!
+          </div>
+        ` : history.slice(0, 20).map(h => {
+    const date = new Date(h.timestamp);
+    const timeAgo = getTimeAgo(date);
+    return `
+          <div class="table-row" onclick="window.navigate('/canvas')">
+            <div class="table-row-icon ${h.success ? 'bg-green color-green' : 'bg-yellow color-yellow'}">
+              ${svgIcon(h.success ? 'check' : 'alertCircle')}
+            </div>
+            <div class="table-row-info">
+              <div class="table-row-name">${h.title}</div>
+              <div class="table-row-sub">${h.nodeCount} nodes · Duration: ${h.duration}</div>
+            </div>
+            <div>
+              <span class="badge ${h.success ? 'badge-success' : 'badge-warning'}">
+                ${h.success ? '● Success' : '● Failed'}
+              </span>
+            </div>
+            <div class="table-row-meta">
+              <div class="table-row-meta-main">${timeAgo}</div>
+              <div class="table-row-meta-sub">${date.toLocaleDateString()}</div>
+            </div>
+          </div>`;
+  }).join('')}
+      </div>
+
+      <!-- Saved Workflows -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-card-title">Saved Workflows</span>
+        </div>
+        ${state.workflows.length === 0 ? `
+          <div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3)">
+            ${svgIcon('database')}<br/><br/>
+            No saved workflows. Use Ctrl+S in the Canvas to save.
+          </div>
+        ` : state.workflows.map(wf => `
+          <div class="table-row" onclick="window.navigate('/canvas')">
+            <div class="table-row-icon bg-indigo color-purple">
+              ${svgIcon('workflow')}
+            </div>
+            <div class="table-row-info">
+              <div class="table-row-name">${wf.title}</div>
+              <div class="table-row-sub">${wf.nodes.length} nodes · ${wf.connections.length} connections</div>
+            </div>
+            <div class="table-row-meta">
+              <div class="table-row-meta-main">${new Date(wf.updatedAt).toLocaleDateString()}</div>
+              <div class="table-row-meta-sub">${new Date(wf.updatedAt).toLocaleTimeString()}</div>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
+}
 
-    if (window.lucide) window.lucide.createIcons();
+function getTimeAgo(date) {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
+  return `${Math.floor(seconds / 86400)} days ago`;
 }
