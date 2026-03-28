@@ -3,6 +3,8 @@ export const state = {
     currentRoute: '/',
     // AI Keys
     apiKey: localStorage.getItem('ff_api_key') || '',
+    get geminiKey() { return this.apiKey; },
+    set geminiKey(v) { this.apiKey = v; },
     featherlessKey: localStorage.getItem('ff_featherless_key') || '',
     aiProvider: localStorage.getItem('ff_ai_provider') || 'gemini', // 'gemini' or 'featherless'
     // Workflows

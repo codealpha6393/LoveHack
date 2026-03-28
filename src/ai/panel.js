@@ -223,6 +223,40 @@ async function callFeatherless(prompt) {
   return data.choices?.[0]?.message?.content || 'No response.';
 }
 
+// ── Lightweight Markdown → HTML
+function mdToHtml(text) {
+  if (!text) return '';
+  let html = text
+    // Escape HTML tags (but allow our own)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Code blocks (```...```)
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) =>
+      `<pre style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;overflow-x:auto;font-size:12px;margin:8px 0;"><code>${code.trim()}</code></pre>`)
+    // Inline code (`...`)
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(99,102,241,0.15);padding:2px 6px;border-radius:4px;font-size:12px;">$1</code>')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h4 style="margin:12px 0 4px;font-size:14px;color:#818cf8;">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="margin:14px 0 6px;font-size:15px;color:#818cf8;">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 style="margin:16px 0 8px;font-size:16px;color:#818cf8;">$1</h2>')
+    // Bold + Italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Horizontal rule
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;">')
+    // Numbered lists
+    .replace(/^\d+\.\s+(.+)$/gm, '<li style="margin:3px 0;padding-left:4px;">$1</li>')
+    // Bullet lists
+    .replace(/^[\-\*]\s+(.+)$/gm, '<li style="margin:3px 0;padding-left:4px;">$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/((?:<li[^>]*>.*<\/li>\s*)+)/g, '<ul style="margin:6px 0;padding-left:18px;list-style:disc;">$1</ul>')
+    // Line breaks (double newline = paragraph, single = <br>)
+    .replace(/\n\n/g, '</p><p style="margin:8px 0;">')
+    .replace(/\n/g, '<br>');
+
+  return `<p style="margin:0;">${html}</p>`;
+}
+
 // ── UI Helpers
 function addUserMessage(messagesEl, text) {
   const div = document.createElement('div');
@@ -235,7 +269,10 @@ function addUserMessage(messagesEl, text) {
 function addBotMessage(messagesEl, html) {
   const div = document.createElement('div');
   div.className = 'ai-message ai';
-  div.innerHTML = `<div class="ai-message-avatar ai">${svgIcon('bot')}</div><div class="ai-message-bubble">${html}</div>`;
+  // If it looks like raw markdown (has ** or # or - bullets), render it
+  const rendered = (html.includes('**') || html.includes('# ') || html.match(/^[\-\*]\s/m) || html.includes('```'))
+    ? mdToHtml(html) : html;
+  div.innerHTML = `<div class="ai-message-avatar ai">${svgIcon('bot')}</div><div class="ai-message-bubble">${rendered}</div>`;
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
