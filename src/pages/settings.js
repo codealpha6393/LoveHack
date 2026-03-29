@@ -1,12 +1,12 @@
 import { svgIcon } from '../icons.js';
-import { state, saveState } from '../state.js';
+import { clearFlowForgeData, saveState, state } from '../state.js';
 
-export function renderSettings(container) {
+export function renderSettings(container, navigate) {
   container.innerHTML = `
     <div class="settings-page">
       <div class="page-header">
         <h1>Settings</h1>
-        <p>Configure your FlowForge AI preferences, API keys, and AI providers.</p>
+        <p>Configure providers, manage app data, and control the launch-ready local account experience.</p>
       </div>
 
       <!-- AI Provider Selection -->
@@ -114,10 +114,25 @@ export function renderSettings(container) {
           <div class="settings-row">
             <div class="settings-row-info">
               <div class="settings-row-label">${svgIcon('trash')} Clear All Data</div>
-              <div class="settings-row-desc">Remove all workflows, settings, and execution history.</div>
+              <div class="settings-row-desc">Remove FlowForge workflows, preferences, and execution history without wiping unrelated browser storage.</div>
             </div>
             <button class="btn btn-sm" id="clear-data" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">
               ${svgIcon('trash')} Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>Account</h2>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <div class="settings-row-label">${svgIcon('user')} Active Profile</div>
+              <div class="settings-row-desc">${state.currentUser ? `${state.currentUser.name} · ${state.currentUser.email}` : 'No local user signed in right now.'}</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="manage-account">
+              ${svgIcon('arrowRight')} ${state.currentUser ? 'Open Users Page' : 'Login / Sign Up'}
             </button>
           </div>
         </div>
@@ -213,10 +228,14 @@ export function renderSettings(container) {
 
   // ── Clear data
   container.querySelector('#clear-data').addEventListener('click', () => {
-    if (confirm('Delete ALL workflows, execution history, and settings?')) {
-      localStorage.clear();
+    if (confirm('Delete FlowForge workflows, execution history, AI settings, and theme preferences?')) {
+      clearFlowForgeData({ includeAccounts: false });
       location.reload();
     }
+  });
+
+  container.querySelector('#manage-account').addEventListener('click', () => {
+    navigate(state.currentUser ? '/users' : '/login');
   });
 }
 
